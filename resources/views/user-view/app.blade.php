@@ -50,6 +50,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.js"></script>
         <!-- Core theme JS-->
         <script src="{{ asset('user-view/js/scripts.js') }}"></script>
+        <script src="{{ asset('user-view/js/custom.js') }}"></script>
         <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
     </body>
 </html>
