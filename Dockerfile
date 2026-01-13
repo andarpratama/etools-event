@@ -9,7 +9,7 @@ RUN npm run build
 FROM composer:2 AS composer_build
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-scripts
 
 FROM php:8.2-apache
 WORKDIR /var/www/html
