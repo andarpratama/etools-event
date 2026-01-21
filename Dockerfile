@@ -25,6 +25,7 @@ RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available
 
 COPY --from=composer_build /app/vendor ./vendor
 
+COPY composer.json composer.lock ./
 COPY app ./app
 COPY bootstrap ./bootstrap
 COPY config ./config

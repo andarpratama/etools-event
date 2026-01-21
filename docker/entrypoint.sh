@@ -81,7 +81,13 @@ fi
 
 php artisan config:cache || true
 php artisan route:cache || true
-php artisan view:cache || true
+
+# Skip view:cache if composer.json doesn't exist (Docker build scenario)
+if [ -f composer.json ]; then
+    php artisan view:cache || true
+else
+    echo "Skipping view:cache (composer.json not found in Docker image)"
+fi
 
 if [ ! -L public/storage ]; then
     php artisan storage:link || true
