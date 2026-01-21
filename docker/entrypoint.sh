@@ -12,31 +12,71 @@ php artisan config:clear || true
 php artisan cache:clear || true
 
 wait_for_db() {
-    echo "Waiting for database connection..."
+    echo "=========================================="
+    echo "Checking database connection..."
+    echo "DB_HOST: ${DB_HOST:-not set}"
+    echo "DB_PORT: ${DB_PORT:-not set}"
+    echo "DB_DATABASE: ${DB_DATABASE:-not set}"
+    echo "DB_USERNAME: ${DB_USERNAME:-not set}"
+    echo "=========================================="
+    
     max_attempts=30
     attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        if php artisan db:show &> /dev/null 2>&1; then
-            echo "Database is up - executing migrations"
+        echo "[Attempt $((attempt + 1))/$max_attempts] Testing database connection..."
+        
+        # Try to connect and show detailed output
+        if php artisan db:show 2>&1; then
+            echo "✓ Database connection successful!"
+            echo "Database is ready - proceeding with migrations"
             return 0
+        else
+            DB_ERROR=$(php artisan db:show 2>&1 || true)
+            echo "✗ Database connection failed: ${DB_ERROR}"
         fi
+        
         attempt=$((attempt + 1))
-        echo "Database is unavailable - sleeping (attempt $attempt/$max_attempts)"
-        sleep 2
+        if [ $attempt -lt $max_attempts ]; then
+            echo "Waiting 2 seconds before retry..."
+            sleep 2
+        fi
     done
     
-    echo "Warning: Could not connect to database after $max_attempts attempts"
+    echo "=========================================="
+    echo "✗ ERROR: Could not connect to database after $max_attempts attempts"
+    echo "Please check your database configuration:"
+    echo "  - DB_HOST: ${DB_HOST:-not set}"
+    echo "  - DB_PORT: ${DB_PORT:-not set}"
+    echo "  - DB_DATABASE: ${DB_DATABASE:-not set}"
+    echo "  - DB_USERNAME: ${DB_USERNAME:-not set}"
+    echo "=========================================="
     return 1
 }
 
 if wait_for_db; then
-    php artisan migrate --force || echo "Migration failed, continuing..."
+    echo "=========================================="
+    echo "Running database migrations..."
+    echo "=========================================="
+    if php artisan migrate --force; then
+        echo "✓ Migrations completed successfully"
+    else
+        echo "✗ Migration failed, but continuing..."
+    fi
     
+    echo "=========================================="
     echo "Seeding database..."
-    php artisan db:seed --class=ToolSeeder --force || echo "Seed completed or skipped"
+    echo "=========================================="
+    if php artisan db:seed --class=ToolSeeder --force; then
+        echo "✓ Database seeding completed successfully"
+    else
+        echo "✗ Seeding failed or skipped"
+    fi
 else
-    echo "Skipping migrations and seeding due to database connection issues"
+    echo "=========================================="
+    echo "⚠ WARNING: Skipping migrations and seeding"
+    echo "Application will start but database features may not work"
+    echo "=========================================="
 fi
 
 php artisan config:cache || true
