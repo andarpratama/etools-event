@@ -3,14 +3,13 @@
         <div class="row gx-4 gx-lg-5 h-100 align-items-center justify-content-center text-center">
             <div class="col-lg-8 align-self-end">
                 <h1 class="text-white font-weight-bold">
-                    Solusi Lengkap Sewa Alat Event Profesional
+                    {{ $settings['tagline'] ?? 'Solusi Lengkap Sewa Alat Event Profesional' }}
                 </h1>
                 <hr class="divider" />
             </div>
             <div class="col-lg-8 align-self-baseline">
                 <p class="text-white-75 mb-5">
-                    Menyediakan sewa sound system, lighting, tenda, panggung, dan perlengkapan event lainnya
-                    untuk acara indoor maupun outdoor. Praktis, lengkap, dan terpercaya.
+                    {{ $settings['tagline'] ? 'Menyediakan sewa sound system, lighting, tenda, panggung, dan perlengkapan event lainnya untuk acara indoor maupun outdoor. Praktis, lengkap, dan terpercaya.' : 'Menyediakan sewa sound system, lighting, tenda, panggung, dan perlengkapan event lainnya untuk acara indoor maupun outdoor. Praktis, lengkap, dan terpercaya.' }}
                 </p>
                 <a class="btn btn-primary btn-xl" href="#about">
                     Lihat Layanan Kami

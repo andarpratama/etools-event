@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>Aliman Pilar Production - Sewa Alat Event Profesional</title>
+        <title>{{ $settings['website_name'] ?? 'ETools Event' }}@if($settings['tagline'] ?? null) - {{ $settings['tagline'] }}@endif</title>
         <!-- Favicon-->
         <link rel="icon" type="image/x-icon" href="{{ asset('user-view/assets/favicon.ico') }}" />
         <!-- Bootstrap Icons-->
@@ -34,13 +34,20 @@
         
         @include('user-view.partials.footer')
 
-        <a href="https://wa.me/628119275730"
-        class="whatsapp-float"
-        target="_blank"
-        aria-label="Chat WhatsApp">
-            <i class="bi bi-whatsapp"></i>
-            <span class="whatsapp-text">Chat CS</span>
-        </a>
+        @if($settings['contact'] ?? null)
+            @php
+                $contact = $settings['contact'];
+                $whatsappNumber = preg_replace('/[^0-9]/', '', $contact);
+                $whatsappLink = 'https://wa.me/' . $whatsappNumber;
+            @endphp
+            <a href="{{ $whatsappLink }}"
+            class="whatsapp-float"
+            target="_blank"
+            aria-label="Chat WhatsApp">
+                <i class="bi bi-whatsapp"></i>
+                <span class="whatsapp-text">Chat CS</span>
+            </a>
+        @endif
 
 
 
@@ -51,6 +58,5 @@
         <!-- Core theme JS-->
         <script src="{{ asset('user-view/js/scripts.js') }}"></script>
         <script src="{{ asset('user-view/js/custom.js') }}"></script>
-        <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
     </body>
 </html>
