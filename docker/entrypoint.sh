@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 PORT="${PORT:-8080}"
 
 sed -i -E "s/^Listen[[:space:]]+[0-9]+/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -i -E "s/<VirtualHost \\*:[0-9]+>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
-cd /var/www/html
+cd /var/www/html || exit 1
 
-php artisan config:clear
-php artisan cache:clear
+php artisan config:clear || true
+php artisan cache:clear || true
 
 wait_for_db() {
     echo "Waiting for database connection..."
@@ -17,7 +17,7 @@ wait_for_db() {
     attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        if php artisan db:show &> /dev/null; then
+        if php artisan db:show &> /dev/null 2>&1; then
             echo "Database is up - executing migrations"
             return 0
         fi
@@ -31,7 +31,7 @@ wait_for_db() {
 }
 
 if wait_for_db; then
-    php artisan migrate --force
+    php artisan migrate --force || echo "Migration failed, continuing..."
     
     echo "Seeding database..."
     php artisan db:seed --class=ToolSeeder --force || echo "Seed completed or skipped"
@@ -39,13 +39,18 @@ else
     echo "Skipping migrations and seeding due to database connection issues"
 fi
 
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
 if [ ! -L public/storage ]; then
-    php artisan storage:link
+    php artisan storage:link || true
 fi
 
+echo "Starting Apache on port ${PORT}..."
+echo "Apache configuration:"
+grep -E "^Listen|^<VirtualHost" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf || true
+
+apache2ctl -t || true
 exec apache2-foreground
 

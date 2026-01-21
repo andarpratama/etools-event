@@ -11,6 +11,34 @@
     <link href="{{ asset('admin-view/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
     <link href="{{ asset('admin-view/css/sb-admin-2.min.css') }}" rel="stylesheet">
+    <style>
+        .url-truncate {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            cursor: help;
+            width: 100%;
+        }
+        .url-truncate:hover {
+            overflow: visible;
+            white-space: normal;
+            word-break: break-all;
+            z-index: 1000;
+            position: relative;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        table.table th:nth-child(3),
+        table.table td:nth-child(3) {
+            width: 300px;
+            max-width: 300px;
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -140,32 +168,60 @@
                                                     $sortedImages = $tool->images->sortBy('sort_order')->values();
                                                 @endphp
                                                 @if($sortedImages && $sortedImages->count() > 0)
-                                                    @foreach($sortedImages as $index => $image)
-                                                        <div class="input-group mb-2 existing-image-group" data-image-id="{{ $image->id }}">
-                                                            <input type="hidden" name="existing_images[]" value="{{ $image->id }}">
-                                                            <div class="input-group-prepend">
-                                                                <span class="input-group-text">
-                                                                    @if($index === 0)
-                                                                        <span class="badge badge-success mr-2">Primary</span>
-                                                                    @endif
-                                                                    @if(($image->type ?? 'image') === 'video')
-                                                                        <video src="{{ $image->image_url }}" style="max-height: 40px; max-width: 60px;" muted></video>
-                                                                    @else
-                                                                        <img src="{{ $image->image_url }}" style="max-height: 40px; max-width: 60px;" onerror="this.style.display='none'">
-                                                                    @endif
-                                                                </span>
-                                                            </div>
-                                                            <input type="url" class="form-control" value="{{ $image->image_url }}" readonly>
-                                                            <div class="input-group-append">
-                                                                @if($index !== 0 && $sortedImages->count() > 1)
-                                                                    <button type="button" class="btn btn-sm btn-info set-primary-image mr-1" data-image-id="{{ $image->id }}" title="Set as Primary">
-                                                                        <i class="fas fa-star"></i> Set as Primary
-                                                                    </button>
-                                                                @endif
-                                                                <button type="button" class="btn btn-sm btn-danger remove-existing-image"><i class="fas fa-trash"></i></button>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 50px;">#</th>
+                                                                    <th style="width: 100px;">Preview</th>
+                                                                    <th style="width: 300px;">URL</th>
+                                                                    <th style="width: 80px;">Type</th>
+                                                                    <th style="width: 150px;">Status</th>
+                                                                    <th style="width: 150px;">Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($sortedImages as $index => $image)
+                                                                    <tr class="existing-image-group" data-image-id="{{ $image->id }}">
+                                                                        <input type="hidden" name="existing_images[]" value="{{ $image->id }}">
+                                                                        <td class="text-center">{{ $index + 1 }}</td>
+                                                                        <td class="text-center">
+                                                                            @if(($image->type ?? 'image') === 'video')
+                                                                                <video src="{{ $image->image_url }}" style="max-height: 60px; max-width: 80px;" class="img-thumbnail" muted></video>
+                                                                            @else
+                                                                                <img src="{{ $image->image_url }}" style="max-height: 60px; max-width: 80px;" class="img-thumbnail" onerror="this.style.display='none'">
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>
+                                                                            <span class="url-truncate" title="{{ $image->image_url }}">{{ $image->image_url }}</span>
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            <span class="badge badge-{{ ($image->type ?? 'image') === 'video' ? 'info' : 'primary' }}">
+                                                                                {{ ucfirst($image->type ?? 'image') }}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            @if($index === 0)
+                                                                                <span class="badge badge-success">Primary</span>
+                                                                            @else
+                                                                                <span class="badge badge-secondary">Secondary</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            @if($index !== 0 && $sortedImages->count() > 1)
+                                                                                <button type="button" class="btn btn-sm btn-info set-primary-image mb-1" data-image-id="{{ $image->id }}" title="Set as Primary">
+                                                                                    <i class="fas fa-star"></i> Set Primary
+                                                                                </button>
+                                                                            @endif
+                                                                            <button type="button" class="btn btn-sm btn-danger remove-existing-image">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 @else
                                                     <p class="text-muted small">No media added yet.</p>
                                                 @endif
@@ -273,6 +329,20 @@
 
             $(document).on('click', '.remove-existing-image', function() {
                 $(this).closest('.existing-image-group').remove();
+                
+                // Update helper text after removal
+                var remainingCount = $('#existing-images-container .existing-image-group').length;
+                var formGroup = $('#existing-images-container').closest('.form-group');
+                var helperText = formGroup.find('label:contains("Existing Media")').siblings('small');
+                
+                if (remainingCount === 0) {
+                    $('#existing-images-container').html('<p class="text-muted small">No media added yet.</p>');
+                    helperText.text('Add more images to enable primary image selection');
+                } else if (remainingCount === 1) {
+                    helperText.text('Add more images to enable primary image selection');
+                } else {
+                    helperText.text('Click "Set as Primary" on any image (except the first one) to make it the primary image');
+                }
             });
 
             $(document).on('change', '.image-file-input', function() {
@@ -342,35 +412,62 @@
                     return (a.sort_order || 0) - (b.sort_order || 0);
                 });
                 
-                var html = '';
-                sortedImages.forEach(function(image, index) {
+                var rowsHtml = sortedImages.map(function(image, index) {
                     var isPrimary = index === 0;
                     var isVideo = (image.type || 'image') === 'video';
                     var mediaTag = isVideo 
-                        ? '<video src="' + image.image_url + '" style="max-height: 40px; max-width: 60px;" muted></video>'
-                        : '<img src="' + image.image_url + '" style="max-height: 40px; max-width: 60px;" onerror="this.style.display=\'none\'">';
+                        ? `<video src="${image.image_url}" style="max-height: 60px; max-width: 80px;" class="img-thumbnail" muted></video>`
+                        : `<img src="${image.image_url}" style="max-height: 60px; max-width: 80px;" class="img-thumbnail" onerror="this.style.display='none'">`;
                     
-                    html += '<div class="input-group mb-2 existing-image-group" data-image-id="' + image.id + '">';
-                    html += '<input type="hidden" name="existing_images[]" value="' + image.id + '">';
-                    html += '<div class="input-group-prepend">';
-                    html += '<span class="input-group-text">';
-                    if (isPrimary) {
-                        html += '<span class="badge badge-success mr-2">Primary</span>';
-                    }
-                    html += mediaTag;
-                    html += '</span>';
-                    html += '</div>';
-                    html += '<input type="url" class="form-control" value="' + image.image_url + '" readonly>';
-                    html += '<div class="input-group-append">';
-                    if (!isPrimary && sortedImages.length > 1) {
-                        html += '<button type="button" class="btn btn-sm btn-info set-primary-image mr-1" data-image-id="' + image.id + '" title="Set as Primary">';
-                        html += '<i class="fas fa-star"></i> Set as Primary';
-                        html += '</button>';
-                    }
-                    html += '<button type="button" class="btn btn-sm btn-danger remove-existing-image"><i class="fas fa-trash"></i></button>';
-                    html += '</div>';
-                    html += '</div>';
-                });
+                    var setPrimaryButton = (!isPrimary && sortedImages.length > 1) 
+                        ? `<button type="button" class="btn btn-sm btn-info set-primary-image mb-1" data-image-id="${image.id}" title="Set as Primary">
+                            <i class="fas fa-star"></i> Set Primary
+                           </button><br>`
+                        : '';
+                    
+                    var statusBadge = isPrimary 
+                        ? '<span class="badge badge-success">Primary</span>'
+                        : '<span class="badge badge-secondary">Secondary</span>';
+                    
+                    return `
+                        <tr class="existing-image-group" data-image-id="${image.id}">
+                            <input type="hidden" name="existing_images[]" value="${image.id}">
+                            <td class="text-center">${index + 1}</td>
+                            <td class="text-center">${mediaTag}</td>
+                            <td><span class="url-truncate" title="${image.image_url}">${image.image_url}</span></td>
+                            <td class="text-center">
+                                <span class="badge badge-${isVideo ? 'info' : 'primary'}">${isVideo ? 'Video' : 'Image'}</span>
+                            </td>
+                            <td class="text-center">${statusBadge}</td>
+                            <td class="text-center">
+                                ${setPrimaryButton}
+                                <button type="button" class="btn btn-sm btn-danger remove-existing-image">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                var html = `
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th style="width: 100px;">Preview</th>
+                                    <th style="width: 200px;">URL</th>
+                                    <th style="width: 80px;">Type</th>
+                                    <th style="width: 150px;">Status</th>
+                                    <th style="width: 150px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
                 
                 container.html(html);
                 
