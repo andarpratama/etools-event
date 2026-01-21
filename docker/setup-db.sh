@@ -28,6 +28,13 @@ for i in {1..60}; do
     sleep 1
 done
 
+# Ensure root has password set (try with unix_socket first, then set password)
+echo "Setting up root password..."
+mysql -u root <<EOF 2>/dev/null || true
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';
+FLUSH PRIVILEGES;
+EOF
+
 # Create database if not exists
 echo "Creating database and user..."
 # Try with password first, then without password (for unix_socket auth)
