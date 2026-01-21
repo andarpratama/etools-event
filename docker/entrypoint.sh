@@ -14,10 +14,14 @@ php artisan cache:clear || true
 wait_for_db() {
     echo "=========================================="
     echo "Checking database connection..."
+    echo "DB_CONNECTION: ${DB_CONNECTION:-not set}"
     echo "DB_HOST: ${DB_HOST:-not set}"
     echo "DB_PORT: ${DB_PORT:-not set}"
     echo "DB_DATABASE: ${DB_DATABASE:-not set}"
     echo "DB_USERNAME: ${DB_USERNAME:-not set}"
+    echo "DB_PASSWORD: ${DB_PASSWORD:+***hidden***}"
+    echo "=========================================="
+    echo "NOTE: If DB_HOST is 127.0.0.1, please set it to the internal database hostname from Render dashboard"
     echo "=========================================="
     
     max_attempts=30
