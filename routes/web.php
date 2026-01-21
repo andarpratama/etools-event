@@ -17,6 +17,9 @@ Route::get('/', function () {
     return view('user-view.app');
 });
 
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [App\Http\Controllers\RobotsController::class, 'index'])->name('robots');
+
 Route::get('/dashboard', function () {
     return view('admin-view.dashboard');
 })->name('dashboard');

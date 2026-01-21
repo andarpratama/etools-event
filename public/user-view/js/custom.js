@@ -55,6 +55,9 @@ async function loadTools() {
       return;
     }
 
+    const baseUrl = window.location.origin;
+    const productSchema = [];
+    
     tools.forEach(tool => {
       const price = new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -63,6 +66,25 @@ async function loadTools() {
       }).format(tool.price);
 
       const badgeClass = getBadgeClass(tool.badge_color);
+      const primaryImage = (tool.images && tool.images.length > 0) 
+        ? tool.images[0].image_url 
+        : (tool.image_url || 'https://via.placeholder.com/300');
+      
+      const productSchemaItem = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": tool.name,
+        "description": tool.description || tool.name,
+        "category": tool.category,
+        "image": primaryImage,
+        "offers": {
+          "@type": "Offer",
+          "price": tool.price,
+          "priceCurrency": "IDR",
+          "availability": "https://schema.org/InStock"
+        }
+      };
+      productSchema.push(productSchemaItem);
       
       let imageHtml = '';
       if (tool.images && tool.images.length > 0) {
@@ -98,13 +120,16 @@ async function loadTools() {
       
       const toolCard = `
         <div class="col-lg-3 col-md-6 mb-4">
-          <div class="card h-100 pb-3">
+          <div class="card h-100 pb-3" itemscope itemtype="https://schema.org/Product">
             ${imageHtml}
             <div class="card-body">
               <span class="badge ${badgeClass} mb-2">${tool.category}</span>
-              <h6 class="card-title mt-2">${tool.name}</h6>
-              <p class="text-muted small mb-1">${tool.description || ''}</p>
-              <h5 class="text-primary fw-bold">${price}</h5>
+              <h6 class="card-title mt-2" itemprop="name">${tool.name}</h6>
+              <p class="text-muted small mb-1" itemprop="description">${tool.description || ''}</p>
+              <h5 class="text-primary fw-bold" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                <span itemprop="price">${price}</span>
+                <meta itemprop="priceCurrency" content="IDR">
+              </h5>
             </div>
             <div class="card-footer bg-transparent border-0 text-center">
               <a href="#" class="btn btn-outline-primary btn-sm">Sewa Sekarang</a>
@@ -115,6 +140,18 @@ async function loadTools() {
       
       container.innerHTML += toolCard;
     });
+    
+    if (productSchema.length > 0) {
+      const existingSchema = document.querySelector('script[data-product-schema]');
+      if (existingSchema) {
+        existingSchema.remove();
+      }
+      const schemaScript = document.createElement('script');
+      schemaScript.type = 'application/ld+json';
+      schemaScript.setAttribute('data-product-schema', 'true');
+      schemaScript.textContent = JSON.stringify(productSchema);
+      document.head.appendChild(schemaScript);
+    }
   } catch (error) {
     console.error('Error loading tools:', error);
     container.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Gagal memuat data alat sewa.</p></div>';

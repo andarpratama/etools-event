@@ -44,10 +44,15 @@ COPY artisan ./artisan
 COPY --from=node_build /app/public/build ./public/build
 
 RUN mkdir -p bootstrap/cache storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
-  && chown -R www-data:www-data storage bootstrap/cache
+  && mkdir -p /var/log/mysql /var/log/apache2 \
+  && chown -R www-data:www-data storage bootstrap/cache \
+  && chown -R mysql:mysql /var/lib/mysql /var/log/mysql
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+COPY docker/setup-db.sh /usr/local/bin/setup-db.sh
+RUN chmod +x /usr/local/bin/setup-db.sh
 
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
