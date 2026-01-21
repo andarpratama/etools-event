@@ -15,7 +15,12 @@ FROM php:8.2-apache
 WORKDIR /var/www/html
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libzip-dev unzip \
+  && apt-get install -y --no-install-recommends \
+    libzip-dev \
+    unzip \
+    supervisor \
+    mysql-server \
+    mysql-client \
   && docker-php-ext-install zip pdo_mysql opcache \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*
@@ -43,6 +48,8 @@ RUN mkdir -p bootstrap/cache storage/framework/cache storage/framework/sessions 
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 8080
 

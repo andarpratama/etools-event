@@ -8,6 +8,39 @@ sed -i -E "s/<VirtualHost \\*:[0-9]+>/<VirtualHost *:${PORT}>/" /etc/apache2/sit
 
 cd /var/www/html || exit 1
 
+# Start MySQL service
+echo "=========================================="
+echo "Starting MySQL service..."
+echo "=========================================="
+service mysql start || true
+
+# Wait for MySQL to be ready
+echo "Waiting for MySQL to be ready..."
+for i in {1..30}; do
+    if mysqladmin ping -h localhost --silent; then
+        echo "✓ MySQL is ready!"
+        break
+    fi
+    echo "Waiting for MySQL... ($i/30)"
+    sleep 1
+done
+
+# Create database if not exists
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS etools CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || true
+mysql -u root -e "CREATE USER IF NOT EXISTS 'etools_user'@'localhost' IDENTIFIED BY 'etools_password';" || true
+mysql -u root -e "GRANT ALL PRIVILEGES ON etools.* TO 'etools_user'@'localhost';" || true
+mysql -u root -e "FLUSH PRIVILEGES;" || true
+
+echo "MySQL database and user configured"
+
+# Set default database config if not set (for Docker MySQL)
+export DB_CONNECTION=${DB_CONNECTION:-mysql}
+export DB_HOST=${DB_HOST:-127.0.0.1}
+export DB_PORT=${DB_PORT:-3306}
+export DB_DATABASE=${DB_DATABASE:-etools}
+export DB_USERNAME=${DB_USERNAME:-etools_user}
+export DB_PASSWORD=${DB_PASSWORD:-etools_password}
+
 php artisan config:clear || true
 php artisan cache:clear || true
 
@@ -102,5 +135,10 @@ echo "Apache configuration:"
 grep -E "^Listen|^<VirtualHost" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf || true
 
 apache2ctl -t || true
-exec apache2-foreground
+
+# Use supervisor to manage both MySQL and Apache
+echo "=========================================="
+echo "Starting services with supervisor..."
+echo "=========================================="
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 
