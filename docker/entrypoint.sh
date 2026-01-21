@@ -19,6 +19,30 @@ if [ ! -d /var/lib/mysql/mysql ]; then
     echo "=========================================="
     mysql_install_db --user=mysql --datadir=/var/lib/mysql || true
     chown -R mysql:mysql /var/lib/mysql || true
+    
+    # Start MariaDB temporarily to set root password
+    echo "Setting up MariaDB root access..."
+    mysqld_safe --user=mysql --datadir=/var/lib/mysql --skip-networking &
+    TEMP_MYSQL_PID=$!
+    
+    # Wait for MySQL to start
+    for i in {1..30}; do
+        if mysqladmin ping -h localhost --silent 2>/dev/null; then
+            break
+        fi
+        sleep 1
+    done
+    
+    # Set root password
+    mysql -u root <<EOF 2>/dev/null || true
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';
+FLUSH PRIVILEGES;
+EOF
+    
+    # Stop temporary MySQL
+    kill $TEMP_MYSQL_PID 2>/dev/null || true
+    wait $TEMP_MYSQL_PID 2>/dev/null || true
+    sleep 2
 fi
 
 # Set default database config if not set (for Docker MySQL)
@@ -57,4 +81,3 @@ echo "=========================================="
 echo "Starting services with supervisor..."
 echo "=========================================="
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
-

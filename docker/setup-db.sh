@@ -30,9 +30,17 @@ done
 
 # Create database if not exists
 echo "Creating database and user..."
+# Try with password first, then without password (for unix_socket auth)
+mysql -u root -proot -e "CREATE DATABASE IF NOT EXISTS etools CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || \
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS etools CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+
+mysql -u root -proot -e "CREATE USER IF NOT EXISTS 'etools_user'@'localhost' IDENTIFIED BY 'etools_password';" 2>/dev/null || \
 mysql -u root -e "CREATE USER IF NOT EXISTS 'etools_user'@'localhost' IDENTIFIED BY 'etools_password';" 2>/dev/null || true
+
+mysql -u root -proot -e "GRANT ALL PRIVILEGES ON etools.* TO 'etools_user'@'localhost';" 2>/dev/null || \
 mysql -u root -e "GRANT ALL PRIVILEGES ON etools.* TO 'etools_user'@'localhost';" 2>/dev/null || true
+
+mysql -u root -proot -e "FLUSH PRIVILEGES;" 2>/dev/null || \
 mysql -u root -e "FLUSH PRIVILEGES;" 2>/dev/null || true
 
 echo "✓ MariaDB database and user configured"
