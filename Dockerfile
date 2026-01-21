@@ -19,8 +19,8 @@ RUN apt-get update \
     libzip-dev \
     unzip \
     supervisor \
-    mysql-server \
-    mysql-client \
+    mariadb-server \
+    mariadb-client \
   && docker-php-ext-install zip pdo_mysql opcache \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*

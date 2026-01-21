@@ -8,30 +8,39 @@ sed -i -E "s/<VirtualHost \\*:[0-9]+>/<VirtualHost *:${PORT}>/" /etc/apache2/sit
 
 cd /var/www/html || exit 1
 
-# Start MySQL service
-echo "=========================================="
-echo "Starting MySQL service..."
-echo "=========================================="
-service mysql start || true
+# Initialize MariaDB if not already initialized
+if [ ! -d /var/lib/mysql/mysql ]; then
+    echo "=========================================="
+    echo "Initializing MariaDB..."
+    echo "=========================================="
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql || true
+fi
 
-# Wait for MySQL to be ready
-echo "Waiting for MySQL to be ready..."
+# Start MariaDB service
+echo "=========================================="
+echo "Starting MariaDB service..."
+echo "=========================================="
+mysqld_safe --user=mysql --datadir=/var/lib/mysql &
+MYSQL_PID=$!
+
+# Wait for MariaDB to be ready
+echo "Waiting for MariaDB to be ready..."
 for i in {1..30}; do
-    if mysqladmin ping -h localhost --silent; then
-        echo "✓ MySQL is ready!"
+    if mysqladmin ping -h localhost --silent 2>/dev/null; then
+        echo "✓ MariaDB is ready!"
         break
     fi
-    echo "Waiting for MySQL... ($i/30)"
+    echo "Waiting for MariaDB... ($i/30)"
     sleep 1
 done
 
 # Create database if not exists
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS etools CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || true
-mysql -u root -e "CREATE USER IF NOT EXISTS 'etools_user'@'localhost' IDENTIFIED BY 'etools_password';" || true
-mysql -u root -e "GRANT ALL PRIVILEGES ON etools.* TO 'etools_user'@'localhost';" || true
-mysql -u root -e "FLUSH PRIVILEGES;" || true
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS etools CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+mysql -u root -e "CREATE USER IF NOT EXISTS 'etools_user'@'localhost' IDENTIFIED BY 'etools_password';" 2>/dev/null || true
+mysql -u root -e "GRANT ALL PRIVILEGES ON etools.* TO 'etools_user'@'localhost';" 2>/dev/null || true
+mysql -u root -e "FLUSH PRIVILEGES;" 2>/dev/null || true
 
-echo "MySQL database and user configured"
+echo "MariaDB database and user configured"
 
 # Set default database config if not set (for Docker MySQL)
 export DB_CONNECTION=${DB_CONNECTION:-mysql}
