@@ -50,9 +50,56 @@ public_html/
 
 ## Step 3: Konfigurasi File Structure untuk Shared Hosting
 
-**PENTING:** Shared hosting biasanya tidak mengizinkan akses ke folder di luar `public_html`. Ada 2 opsi:
+**PENTING:** Shared hosting biasanya tidak mengizinkan akses ke folder di luar `public_html`. Ada 3 opsi:
 
-### Opsi 1: Semua File di public_html (Recommended)
+### Opsi 1: Keep Laravel Structure Intact (Recommended - No File Moving)
+
+**Keep semua file Laravel di struktur aslinya, gunakan `.htaccess` untuk redirect ke `public/`:**
+
+1. Upload semua file Laravel ke `public_html` dengan struktur asli:
+```
+public_html/
+├── app/
+├── bootstrap/
+├── config/
+├── database/
+├── public/          (KEEP di sini, jangan dipindah!)
+│   ├── index.php
+│   ├── .htaccess
+│   └── ...
+├── resources/
+├── routes/
+├── storage/
+├── vendor/
+├── .env
+├── artisan
+└── composer.json
+```
+
+2. Buat file `.htaccess` di root `public_html/`:
+
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect semua request ke public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /public/$1 [L]
+    
+    # Redirect root ke public/index.php
+    RewriteRule ^$ /public/index.php [L]
+</IfModule>
+```
+
+**Keuntungan:**
+- ✅ Tidak perlu memindahkan file
+- ✅ Struktur Laravel tetap utuh
+- ✅ Mudah untuk update/maintenance
+- ✅ Compatible dengan semua Laravel commands
+
+### Opsi 2: Semua File di public_html (Traditional Method)
 
 1. Upload semua file Laravel ke `public_html`
 2. Pindahkan isi folder `public/` ke root `public_html/`
@@ -83,17 +130,20 @@ $response = $kernel->handle(
 $kernel->terminate($request, $response);
 ```
 
-### Opsi 2: Menggunakan Subfolder (Jika menggunakan subdomain/folder)
+### Opsi 3: Menggunakan Subfolder (Jika menggunakan subdomain/folder)
 
 Jika aplikasi di subfolder seperti `public_html/etools-event/`:
 
 1. Upload semua file ke `public_html/etools-event/`
-2. Pindahkan isi `public/` ke `public_html/etools-event/public/`
-3. Update `public_html/etools-event/public/index.php`:
+2. Keep struktur asli dengan `public/` folder
+3. Buat `.htaccess` di `public_html/etools-event/`:
 
-```php
-require __DIR__.'/../../vendor/autoload.php';
-$app = require_once __DIR__.'/../../bootstrap/app.php';
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/etools-event/public/
+    RewriteRule ^(.*)$ /etools-event/public/$1 [L]
+</IfModule>
 ```
 
 ## Step 4: Setup Environment File
@@ -224,6 +274,30 @@ npm run build
 Upload folder `public/build/` ke server.
 
 ## Step 10: Konfigurasi .htaccess
+
+### Jika menggunakan Opsi 1 (Keep Laravel Structure):
+
+1. Copy file `public_html.htaccess` (dari project root) ke `public_html/.htaccess`
+2. Atau buat file `.htaccess` di root `public_html/` dengan isi:
+
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect semua request ke public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /public/$1 [L]
+    
+    # Redirect root ke public/index.php
+    RewriteRule ^$ /public/index.php [L]
+</IfModule>
+```
+
+3. File `.htaccess` di `public/.htaccess` sudah ada dan tidak perlu diubah
+
+### Jika menggunakan Opsi 2 (Traditional - File Dipindah):
 
 Pastikan ada file `.htaccess` di root `public_html/`:
 

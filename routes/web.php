@@ -33,6 +33,7 @@ Route::prefix('admin/tools')->name('admin.tools.')->group(function () {
     Route::put('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'update'])->name('update');
     Route::delete('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'destroy'])->name('destroy');
     Route::post('/images/{imageId}/set-primary', [App\Http\Controllers\Admin\ToolController::class, 'setPrimaryImage'])->name('images.set-primary');
+    Route::delete('/images/{imageId}', [App\Http\Controllers\Admin\ToolController::class, 'deleteImage'])->name('images.delete');
     Route::get('/data/datatable', [App\Http\Controllers\Admin\ToolController::class, 'datatable'])->name('datatable');
 });
 

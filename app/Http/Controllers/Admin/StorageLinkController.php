@@ -40,8 +40,13 @@ class StorageLinkController extends Controller
 
         try {
             $linkPath = public_path('storage');
+            $targetPath = storage_path('app/public');
             
-            if (File::exists($linkPath) || is_link($linkPath)) {
+            if (!File::exists($targetPath)) {
+                File::makeDirectory($targetPath, 0755, true);
+            }
+            
+            if (File::exists($linkPath)) {
                 if (is_link($linkPath)) {
                     unlink($linkPath);
                 } else {
@@ -49,20 +54,30 @@ class StorageLinkController extends Controller
                 }
             }
             
-            Artisan::call('storage:link');
-            
-            $output = Artisan::output();
-            
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Storage link created successfully!',
-                    'output' => $output
-                ]);
+            if (function_exists('symlink')) {
+                try {
+                    Artisan::call('storage:link');
+                    $output = Artisan::output();
+                    
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Storage link created successfully!',
+                            'output' => $output
+                        ]);
+                    }
+                    
+                    return redirect()->route('admin.settings.index')
+                        ->with('success', 'Storage link created successfully!');
+                } catch (\Exception $e) {
+                    if (str_contains($e->getMessage(), 'symlink') || str_contains($e->getMessage(), 'Symlink')) {
+                        return $this->createStorageCopy($linkPath, $targetPath, $request);
+                    }
+                    throw $e;
+                }
+            } else {
+                return $this->createStorageCopy($linkPath, $targetPath, $request);
             }
-            
-            return redirect()->route('admin.settings.index')
-                ->with('success', 'Storage link created successfully!');
                 
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
@@ -74,6 +89,50 @@ class StorageLinkController extends Controller
             
             return redirect()->route('admin.settings.index')
                 ->with('error', 'Error creating storage link: ' . $e->getMessage());
+        }
+    }
+    
+    private function createStorageCopy($linkPath, $targetPath, $request)
+    {
+        try {
+            if (!File::exists($targetPath)) {
+                File::makeDirectory($targetPath, 0755, true);
+            }
+            
+            if (File::exists($linkPath)) {
+                if (is_link($linkPath)) {
+                    @unlink($linkPath);
+                } else {
+                    File::deleteDirectory($linkPath);
+                }
+            }
+            
+            File::makeDirectory($linkPath, 0755, true);
+            File::copyDirectory($targetPath, $linkPath);
+            
+            $message = 'Storage directory copied successfully! (Symlink not available on this server, using copy method)';
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'note' => 'Note: Files are copied, not symlinked. New uploads will be automatically synced.'
+                ]);
+            }
+            
+            return redirect()->route('admin.settings.index')
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error copying storage: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('admin.settings.index')
+                ->with('error', 'Error copying storage: ' . $e->getMessage());
         }
     }
 }

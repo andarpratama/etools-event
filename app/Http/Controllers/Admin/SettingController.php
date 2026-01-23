@@ -39,10 +39,12 @@ class SettingController extends Controller
             if ($oldLogo && strpos($oldLogo, '/storage/') === 0) {
                 $path = str_replace('/storage/', '', $oldLogo);
                 Storage::disk('public')->delete($path);
+                $this->deletePublicFile($path);
             }
 
             $path = $request->file('logo_light')->store('settings', 'public');
             Setting::set('logo_light', Storage::url($path));
+            $this->syncFileToPublic($path);
         }
 
         if ($request->hasFile('logo_dark')) {
@@ -50,10 +52,12 @@ class SettingController extends Controller
             if ($oldLogo && strpos($oldLogo, '/storage/') === 0) {
                 $path = str_replace('/storage/', '', $oldLogo);
                 Storage::disk('public')->delete($path);
+                $this->deletePublicFile($path);
             }
 
             $path = $request->file('logo_dark')->store('settings', 'public');
             Setting::set('logo_dark', Storage::url($path));
+            $this->syncFileToPublic($path);
         }
 
         Setting::set('website_name', $validated['website_name']);
@@ -62,5 +66,27 @@ class SettingController extends Controller
         Setting::set('contact', $validated['contact'] ?? '');
 
         return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
+    }
+
+    private function syncFileToPublic($storagePath)
+    {
+        $sourcePath = storage_path('app/public/' . $storagePath);
+        $publicPath = public_path('storage/' . $storagePath);
+        $publicDir = dirname($publicPath);
+
+        if (file_exists($sourcePath)) {
+            if (!is_dir($publicDir)) {
+                mkdir($publicDir, 0755, true);
+            }
+            copy($sourcePath, $publicPath);
+        }
+    }
+
+    private function deletePublicFile($path)
+    {
+        $publicPath = public_path('storage/' . $path);
+        if (file_exists($publicPath)) {
+            unlink($publicPath);
+        }
     }
 }

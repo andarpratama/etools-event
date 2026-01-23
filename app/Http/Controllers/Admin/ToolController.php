@@ -54,6 +54,7 @@ class ToolController extends Controller
                 if ($file && $file->isValid()) {
                     $path = $file->store('tools', 'public');
                     $fileUrl = Storage::url($path);
+                    $this->syncFileToPublic($path);
                     
                     $mimeType = $file->getMimeType();
                     $type = strpos($mimeType, 'video/') === 0 ? 'video' : 'image';
@@ -152,23 +153,27 @@ class ToolController extends Controller
 
         $tool->update($validated);
 
-        if ($request->has('existing_images')) {
+        if ($request->has('existing_images') && is_array($request->existing_images)) {
+            $existingImageIds = array_filter(array_map('intval', $request->existing_images));
             $imagesToDelete = ToolImage::where('tool_id', $tool->id)
-                ->whereNotIn('id', $request->existing_images)
+                ->whereNotIn('id', $existingImageIds)
                 ->get();
             
             foreach ($imagesToDelete as $image) {
                 if (strpos($image->image_url, '/storage/') === 0) {
                     $path = str_replace('/storage/', '', $image->image_url);
                     Storage::disk('public')->delete($path);
+                    $this->deletePublicFile($path);
                 }
                 $image->delete();
             }
-        } else {
+        } elseif ($request->has('existing_images') && empty($request->existing_images)) {
+            // All images were removed
             foreach ($tool->images as $image) {
                 if (strpos($image->image_url, '/storage/') === 0) {
                     $path = str_replace('/storage/', '', $image->image_url);
                     Storage::disk('public')->delete($path);
+                    $this->deletePublicFile($path);
                 }
             }
             $tool->images()->delete();
@@ -183,6 +188,7 @@ class ToolController extends Controller
                 if ($file && $file->isValid()) {
                     $path = $file->store('tools', 'public');
                     $fileUrl = Storage::url($path);
+                    $this->syncFileToPublic($path);
                     
                     $mimeType = $file->getMimeType();
                     $type = strpos($mimeType, 'video/') === 0 ? 'video' : 'image';
@@ -262,6 +268,32 @@ class ToolController extends Controller
         return redirect()->route('admin.tools.index')->with('success', 'Tool deleted successfully.');
     }
 
+    public function deleteImage(string $imageId)
+    {
+        try {
+            $image = ToolImage::findOrFail($imageId);
+            $toolId = $image->tool_id;
+            
+            if (strpos($image->image_url, '/storage/') === 0) {
+                $path = str_replace('/storage/', '', $image->image_url);
+                Storage::disk('public')->delete($path);
+                $this->deletePublicFile($path);
+            }
+            
+            $image->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function setPrimaryImage(Request $request, string $imageId)
     {
         try {
@@ -338,5 +370,27 @@ class ToolController extends Controller
             })
             ->rawColumns(['action', 'is_active'])
             ->make(true);
+    }
+
+    private function syncFileToPublic($storagePath)
+    {
+        $sourcePath = storage_path('app/public/' . $storagePath);
+        $publicPath = public_path('storage/' . $storagePath);
+        $publicDir = dirname($publicPath);
+
+        if (file_exists($sourcePath)) {
+            if (!is_dir($publicDir)) {
+                mkdir($publicDir, 0755, true);
+            }
+            copy($sourcePath, $publicPath);
+        }
+    }
+
+    private function deletePublicFile($path)
+    {
+        $publicPath = public_path('storage/' . $path);
+        if (file_exists($publicPath)) {
+            unlink($publicPath);
+        }
     }
 }

@@ -235,7 +235,7 @@
                                                 <div class="mb-3 image-input-group border p-3 rounded">
                                                     <div class="form-group mb-2">
                                                         <label class="small">Media Type</label>
-                                                        <select class="form-control media-type-select" name="media_types[]" required>
+                                                        <select class="form-control media-type-select" name="media_types[]">
                                                             <option value="image">Image</option>
                                                             <option value="video">Video</option>
                                                         </select>
@@ -301,7 +301,7 @@
                 var newInput = '<div class="mb-3 image-input-group border p-3 rounded">' +
                     '<div class="form-group mb-2">' +
                     '<label class="small">Media Type</label>' +
-                    '<select class="form-control media-type-select" name="media_types[]" required>' +
+                    '<select class="form-control media-type-select" name="media_types[]">' +
                     '<option value="image">Image</option>' +
                     '<option value="video">Video</option>' +
                     '</select>' +
@@ -328,21 +328,60 @@
             });
 
             $(document).on('click', '.remove-existing-image', function() {
-                $(this).closest('.existing-image-group').remove();
+                var $row = $(this).closest('.existing-image-group');
+                var imageId = $row.data('image-id');
+                var $button = $(this);
                 
-                // Update helper text after removal
-                var remainingCount = $('#existing-images-container .existing-image-group').length;
-                var formGroup = $('#existing-images-container').closest('.form-group');
-                var helperText = formGroup.find('label:contains("Existing Media")').siblings('small');
-                
-                if (remainingCount === 0) {
-                    $('#existing-images-container').html('<p class="text-muted small">No media added yet.</p>');
-                    helperText.text('Add more images to enable primary image selection');
-                } else if (remainingCount === 1) {
-                    helperText.text('Add more images to enable primary image selection');
-                } else {
-                    helperText.text('Click "Set as Primary" on any image (except the first one) to make it the primary image');
+                if (!imageId) {
+                    showAlert('Image ID not found.', 'error');
+                    return;
                 }
+                
+                // Disable button and show loading
+                $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+                
+                // Call API to delete image
+                fetch('/admin/tools/images/' + imageId, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || $('input[name="_token"]').val(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the row (this will also remove the hidden input)
+                        $row.fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // Update helper text after removal
+                            var remainingCount = $('#existing-images-container .existing-image-group').length;
+                            var formGroup = $('#existing-images-container').closest('.form-group');
+                            var helperText = formGroup.find('label:contains("Existing Media")').siblings('small');
+                            
+                            if (remainingCount === 0) {
+                                $('#existing-images-container').html('<p class="text-muted small">No media added yet.</p>');
+                                helperText.text('Add more images to enable primary image selection');
+                            } else if (remainingCount === 1) {
+                                helperText.text('Add more images to enable primary image selection');
+                            } else {
+                                helperText.text('Click "Set as Primary" on any image (except the first one) to make it the primary image');
+                            }
+                        });
+                        
+                        showAlert('Image deleted successfully!', 'success');
+                    } else {
+                        showAlert(data.message || 'Error deleting image.', 'error');
+                        $button.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while deleting the image.', 'error');
+                    $button.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                });
             });
 
             $(document).on('change', '.image-file-input', function() {
@@ -527,16 +566,23 @@
             // Form validation
             function validateForm() {
                 var isValid = true;
+                var hasEmptyRequiredGroup = false;
+                
                 $('.image-input-group').each(function() {
                     var fileInput = $(this).find('.image-file-input');
                     var urlInput = $(this).find('.image-url-input');
-                    if (!fileInput.val() && !urlInput.val()) {
-                        isValid = false;
-                        $(this).addClass('border-danger');
+                    var hasFile = fileInput.val() && fileInput[0].files.length > 0;
+                    var hasUrl = urlInput.val() && urlInput.val().trim() !== '';
+                    
+                    if (!hasFile && !hasUrl) {
+                        // Empty group is fine - it will be ignored on submit
+                        $(this).removeClass('border-danger');
                     } else {
+                        // If group has content, validate it
                         $(this).removeClass('border-danger');
                     }
                 });
+                
                 return isValid;
             }
 
@@ -577,10 +623,18 @@
             $('#tool-form').on('submit', async function(e) {
                 e.preventDefault();
 
-                if (!validateForm()) {
-                    showAlert('Please provide either a file upload or media URL for each media entry.', 'error');
-                    return;
-                }
+                // Remove empty image input groups before submission
+                $('.image-input-group').each(function() {
+                    var fileInput = $(this).find('.image-file-input');
+                    var urlInput = $(this).find('.image-url-input');
+                    var hasFile = fileInput.val() && fileInput[0].files.length > 0;
+                    var hasUrl = urlInput.val() && urlInput.val().trim() !== '';
+                    
+                    if (!hasFile && !hasUrl) {
+                        // Remove empty groups to avoid validation issues
+                        $(this).remove();
+                    }
+                });
 
                 clearErrors();
 
@@ -592,6 +646,12 @@
                 // Prepare FormData
                 var formData = new FormData(this);
                 formData.append('_method', 'PUT');
+                
+                // Ensure existing_images array is sent (even if empty)
+                formData.delete('existing_images[]');
+                $('#existing-images-container input[name="existing_images[]"]').each(function() {
+                    formData.append('existing_images[]', $(this).val());
+                });
                 
                 // Handle checkbox - if not checked, explicitly set to 0
                 if (!$('#is_active').is(':checked')) {
