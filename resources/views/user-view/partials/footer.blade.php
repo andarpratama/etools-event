@@ -4,7 +4,7 @@
 
             <!-- Company Info -->
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                <h5 class="mb-2">{{ $settings['website_name'] ?? 'ETools Event' }}</h5>
+                <h5 class="mb-2">{{ $settings['website_name'] ?? '' }}</h5>
                 @if($settings['tagline'] ?? null)
                     <p class="small text-muted mb-2">
                         {{ $settings['tagline'] }}
@@ -35,7 +35,7 @@
                     </p>
                 @endif
                 <p class="small text-muted mb-0">
-                    © {{ date('Y') }} {{ $settings['website_name'] ?? 'ETools Event' }}. All rights reserved.
+                    © {{ date('Y') }} {{ $settings['website_name'] ?? '' }}. All rights reserved.
                 </p>
             </div>
 

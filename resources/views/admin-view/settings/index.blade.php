@@ -34,6 +34,15 @@
                         </div>
                     @endif
 
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">General Settings</h6>
@@ -128,6 +137,47 @@
                             </form>
                         </div>
                     </div>
+
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Storage Link</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Create symbolic link from <code>public/storage</code> to <code>storage/app/public</code>.</p>
+                            
+                            <div class="alert alert-info">
+                                <strong>Setup Instructions:</strong>
+                                <ol class="mb-0 pl-3">
+                                    <li>Open your <code>.env</code> file in the project root</li>
+                                    <li>Add this line: <code>STORAGE_LINK_TOKEN=your-secret-token-here</code></li>
+                                    <li>Replace <code>your-secret-token-here</code> with a secure random string</li>
+                                    <li>Save the file</li>
+                                    <li>Use the URL below with your token</li>
+                                </ol>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Storage Link URL:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="storageLinkUrl" value="{{ route('admin.storage-link') }}?token=YOUR_TOKEN_HERE" readonly>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="copyStorageLinkUrl()">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <strong>Step 1:</strong> Add <code>STORAGE_LINK_TOKEN=your-token</code> to your <code>.env</code> file<br>
+                                    <strong>Step 2:</strong> Replace <code>YOUR_TOKEN_HERE</code> in the URL above with your actual token<br>
+                                    <strong>Step 3:</strong> Visit the complete URL in your browser to create the storage link
+                                </small>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <strong>Security Note:</strong> Keep your token secret. Anyone with the token can create the storage link. Use a strong, random token.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -169,6 +219,25 @@
                 };
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        function copyStorageLinkUrl() {
+            const input = document.getElementById('storageLinkUrl');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
         }
     </script>
 </body>

@@ -2,12 +2,12 @@
     <div class="container px-4 px-lg-5">
         <a class="navbar-brand" href="#page-top">
             @if($settings['logo_light'] ?? null)
-                <img src="{{ $settings['logo_light'] }}" alt="{{ $settings['website_name'] ?? 'Logo' }}" class="navbar-logo navbar-logo-light" style="max-height: 40px; margin-right: 10px;" onerror="this.style.display='none';">
+                <img src="{{ $settings['logo_light'] }}" alt="{{ $settings['website_name'] ?? '' }} - Logo" class="navbar-logo navbar-logo-light" style="max-height: 40px; margin-right: 10px;" width="40" height="40" onerror="this.style.display='none';">
             @endif
             @if($settings['logo_dark'] ?? null)
-                <img src="{{ $settings['logo_dark'] }}" alt="{{ $settings['website_name'] ?? 'Logo' }}" class="navbar-logo navbar-logo-dark" style="max-height: 40px; margin-right: 10px; display: none;" onerror="this.style.display='none';">
+                <img src="{{ $settings['logo_dark'] }}" alt="{{ $settings['website_name'] ?? '' }} - Logo" class="navbar-logo navbar-logo-dark" style="max-height: 40px; margin-right: 10px; display: none;" width="40" height="40" onerror="this.style.display='none';">
             @endif
-            <span class="navbar-brand-text">{{ $settings['website_name'] ?? 'ETools Event' }}</span>
+            <span class="navbar-brand-text">{{ $settings['website_name'] ?? '' }}</span>
         </a>
         <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigasi">
             <span class="navbar-toggler-icon"></span>

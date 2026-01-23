@@ -98,7 +98,7 @@ async function loadTools() {
             </div>`;
           } else {
             imageHtml += `<div class="carousel-item ${idx === 0 ? 'active' : ''}">
-              <img src="${img.image_url}" class="d-block w-100 card-img-top" alt="${tool.name}" style="height: 200px; object-fit: cover;">
+              <img src="${img.image_url}" class="d-block w-100 card-img-top" alt="${tool.name}" style="height: 200px; object-fit: cover;" loading="lazy">
             </div>`;
           }
         });
@@ -115,7 +115,7 @@ async function loadTools() {
         }
         imageHtml += `</div>`;
       } else {
-        imageHtml = `<img src="${tool.image_url || 'https://via.placeholder.com/300'}" class="card-img-top" alt="${tool.name}" style="height: 200px; object-fit: cover;">`;
+        imageHtml = `<img src="${tool.image_url || 'https://via.placeholder.com/300'}" class="card-img-top" alt="${tool.name}" style="height: 200px; object-fit: cover;" loading="lazy">`;
       }
       
       const toolCard = `

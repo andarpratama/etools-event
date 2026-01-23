@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         
         @php
-            $websiteName = $settings['website_name'] ?? 'ETools Event';
+            $websiteName = $settings['website_name'] ?? '';
             $tagline = $settings['tagline'] ?? 'Solusi Lengkap Sewa Alat Event Profesional';
             $seoDescription = $settings['seo_description'] ?? 'Menyediakan sewa sound system, lighting, tenda, panggung, dan perlengkapan event lainnya untuk acara indoor maupun outdoor. Praktis, lengkap, dan terpercaya.';
             $seoKeywords = $settings['seo_keywords'] ?? 'sewa alat event, sound system, lighting, tenda, panggung, event equipment rental';
@@ -70,32 +70,54 @@
         {!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
         </script>
         
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Beranda",
+                    "item": "{{ $baseUrl }}"
+                }
+            ]
+        }
+        </script>
+        
         <link rel="icon" type="image/x-icon" href="{{ asset('user-view/assets/favicon.ico') }}" />
-        <!-- Bootstrap Icons-->
+        
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+        <link rel="dns-prefetch" href="https://images.unsplash.com">
+        
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
-        <!-- Google fonts-->
         <link href="https://fonts.googleapis.com/css?family=Merriweather+Sans:400,700" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic" rel="stylesheet" type="text/css" />
-        <!-- SimpleLightbox plugin CSS-->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css" rel="stylesheet" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="{{ asset('user-view/css/styles.css') }}" rel="stylesheet">
         <link href="{{ asset('user-view/css/custom.css') }}" rel="stylesheet">
     </head>
     <body id="page-top">
-        <!-- Navigation-->
-        @include('user-view.partials.navbar')
-        @include('user-view.partials.header')
-        <!-- Masthead-->
+        <nav role="navigation" aria-label="Navigasi utama">
+            @include('user-view.partials.navbar')
+        </nav>
         
-        <!-- About-->
-        @include('user-view.home.about')
-        @include('user-view.home.services')
-        @include('user-view.home.portfolio')
-        @include('user-view.home.tools')
-        @include('user-view.home.contact')
+        <main>
+            @include('user-view.partials.header')
+            @include('user-view.home.about')
+            @include('user-view.home.services')
+            @include('user-view.home.portfolio')
+            @include('user-view.home.tools')
+            @include('user-view.home.contact')
+        </main>
         
-        @include('user-view.partials.footer')
+        <footer role="contentinfo">
+            @include('user-view.partials.footer')
+        </footer>
 
         @if($settings['contact'] ?? null)
             @php
@@ -114,12 +136,9 @@
 
 
 
-        <!-- Bootstrap core JS-->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- SimpleLightbox plugin JS-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.js"></script>
-        <!-- Core theme JS-->
-        <script src="{{ asset('user-view/js/scripts.js') }}"></script>
-        <script src="{{ asset('user-view/js/custom.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.js" defer></script>
+        <script src="{{ asset('user-view/js/scripts.js') }}" defer></script>
+        <script src="{{ asset('user-view/js/custom.js') }}" defer></script>
     </body>
 </html>

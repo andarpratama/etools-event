@@ -12,7 +12,7 @@
         @endif
         <div class="sidebar-brand-text mx-3">
             @php
-                $websiteName = $settings['website_name'] ?? 'ETools Event';
+                $websiteName = $settings['website_name'] ?? '';
                 $firstWord = explode(' ', $websiteName)[0];
             @endphp
             {{ $firstWord }}
@@ -70,6 +70,13 @@
         <a class="nav-link" href="{{ route('admin.tools.index') }}">
             <i class="fas fa-fw fa-tools"></i>
             <span>Tools Management</span></a>
+    </li>
+
+    <!-- Nav Item - Portfolio -->
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('admin.portfolios.index') }}">
+            <i class="fas fa-fw fa-images"></i>
+            <span>Portfolio Management</span></a>
     </li>
 
     <!-- Nav Item - Settings -->

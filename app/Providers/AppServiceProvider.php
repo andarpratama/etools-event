@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
         try {
             View::composer('user-view.*', function ($view) {
                 try {
-                    $websiteName = Setting::get('website_name', 'ETools Event');
+                    $websiteName = Setting::get('website_name');
                     $tagline = Setting::get('tagline', 'Solusi Lengkap Sewa Alat Event Profesional');
                     $baseUrl = config('app.url');
                     
@@ -36,13 +36,12 @@ class AppServiceProvider extends ServiceProvider
                         ]
                     ]);
                 } catch (\Exception $e) {
-                    // Fallback to defaults if database is not available
                     $baseUrl = config('app.url');
                     $view->with([
                         'settings' => [
                             'logo_light' => null,
                             'logo_dark' => null,
-                            'website_name' => 'ETools Event',
+                            'website_name' => null,
                             'tagline' => 'Solusi Lengkap Sewa Alat Event Profesional',
                             'address' => null,
                             'contact' => null,
@@ -60,19 +59,18 @@ class AppServiceProvider extends ServiceProvider
                         'settings' => [
                             'logo_light' => Setting::get('logo_light'),
                             'logo_dark' => Setting::get('logo_dark'),
-                            'website_name' => Setting::get('website_name', 'ETools Event'),
+                            'website_name' => Setting::get('website_name'),
                             'tagline' => Setting::get('tagline'),
                             'address' => Setting::get('address'),
                             'contact' => Setting::get('contact'),
                         ]
                     ]);
                 } catch (\Exception $e) {
-                    // Fallback to defaults if database is not available
                     $view->with([
                         'settings' => [
                             'logo_light' => null,
                             'logo_dark' => null,
-                            'website_name' => 'ETools Event',
+                            'website_name' => null,
                             'tagline' => null,
                             'address' => null,
                             'contact' => null,

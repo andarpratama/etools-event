@@ -14,7 +14,7 @@ class SettingController extends Controller
         $settings = [
             'logo_light' => Setting::get('logo_light'),
             'logo_dark' => Setting::get('logo_dark'),
-            'website_name' => Setting::get('website_name', 'ETools Event'),
+            'website_name' => Setting::get('website_name'),
             'tagline' => Setting::get('tagline'),
             'address' => Setting::get('address'),
             'contact' => Setting::get('contact'),
