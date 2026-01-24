@@ -20,37 +20,45 @@ Route::get('/', function () {
 Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [App\Http\Controllers\RobotsController::class, 'index'])->name('robots');
 
-Route::get('/dashboard', function () {
-    return view('admin-view.dashboard');
-})->name('dashboard');
+Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
-Route::prefix('admin/tools')->name('admin.tools.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\ToolController::class, 'index'])->name('index');
-    Route::get('/create', [App\Http\Controllers\Admin\ToolController::class, 'create'])->name('create');
-    Route::post('/', [App\Http\Controllers\Admin\ToolController::class, 'store'])->name('store');
-    Route::get('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [App\Http\Controllers\Admin\ToolController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'update'])->name('update');
-    Route::delete('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'destroy'])->name('destroy');
-    Route::post('/images/{imageId}/set-primary', [App\Http\Controllers\Admin\ToolController::class, 'setPrimaryImage'])->name('images.set-primary');
-    Route::delete('/images/{imageId}', [App\Http\Controllers\Admin\ToolController::class, 'deleteImage'])->name('images.delete');
-    Route::get('/data/datatable', [App\Http\Controllers\Admin\ToolController::class, 'datatable'])->name('datatable');
-});
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin-view.dashboard');
+    })->name('dashboard');
 
-Route::prefix('admin/settings')->name('admin.settings.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\SettingController::class, 'index'])->name('index');
-    Route::put('/', [App\Http\Controllers\Admin\SettingController::class, 'update'])->name('update');
-});
+    Route::prefix('admin/tools')->name('admin.tools.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\ToolController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\ToolController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\ToolController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [App\Http\Controllers\Admin\ToolController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\Admin\ToolController::class, 'destroy'])->name('destroy');
+        Route::post('/images/{imageId}/set-primary', [App\Http\Controllers\Admin\ToolController::class, 'setPrimaryImage'])->name('images.set-primary');
+        Route::delete('/images/{imageId}', [App\Http\Controllers\Admin\ToolController::class, 'deleteImage'])->name('images.delete');
+        Route::get('/data/datatable', [App\Http\Controllers\Admin\ToolController::class, 'datatable'])->name('datatable');
+    });
 
-Route::get('/admin/storage-link', [App\Http\Controllers\Admin\StorageLinkController::class, 'create'])->name('admin.storage-link');
+    Route::prefix('admin/settings')->name('admin.settings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\SettingController::class, 'index'])->name('index');
+        Route::put('/', [App\Http\Controllers\Admin\SettingController::class, 'update'])->name('update');
+    });
 
-Route::prefix('admin/portfolios')->name('admin.portfolios.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\PortfolioController::class, 'index'])->name('index');
-    Route::get('/create', [App\Http\Controllers\Admin\PortfolioController::class, 'create'])->name('create');
-    Route::post('/', [App\Http\Controllers\Admin\PortfolioController::class, 'store'])->name('store');
-    Route::get('/{id}', [App\Http\Controllers\Admin\PortfolioController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [App\Http\Controllers\Admin\PortfolioController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [App\Http\Controllers\Admin\PortfolioController::class, 'update'])->name('update');
-    Route::delete('/{id}', [App\Http\Controllers\Admin\PortfolioController::class, 'destroy'])->name('destroy');
-    Route::get('/data/datatable', [App\Http\Controllers\Admin\PortfolioController::class, 'datatable'])->name('datatable');
+    Route::get('/admin/storage-link', [App\Http\Controllers\Admin\StorageLinkController::class, 'create'])->name('admin.storage-link');
+    
+    Route::get('/admin/analytics/daily', [App\Http\Controllers\Admin\AnalyticsController::class, 'getDailyViews'])->name('admin.analytics.daily');
+
+    Route::prefix('admin/portfolios')->name('admin.portfolios.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PortfolioController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\PortfolioController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\PortfolioController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\Admin\PortfolioController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [App\Http\Controllers\Admin\PortfolioController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Admin\PortfolioController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\Admin\PortfolioController::class, 'destroy'])->name('destroy');
+        Route::get('/data/datatable', [App\Http\Controllers\Admin\PortfolioController::class, 'datatable'])->name('datatable');
+    });
 });

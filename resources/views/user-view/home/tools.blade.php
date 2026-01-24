@@ -6,7 +6,7 @@
             Pilih perlengkapan event sesuai kebutuhan Anda. Harga sewa per hari.
         </p>
 
-        <div class="row gx-4 gx-lg-5" id="tools-container">
+        <div class="row gx-4 gx-lg-5" id="tools-container" data-whatsapp-number="@if($settings['contact'] ?? null){{ preg_replace('/[^0-9]/', '', $settings['contact']) }}@endif">
             <div class="col-12 text-center">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>

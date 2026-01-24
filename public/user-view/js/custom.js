@@ -55,6 +55,7 @@ async function loadTools() {
       return;
     }
 
+    const whatsappNumber = container.getAttribute('data-whatsapp-number') || '';
     const baseUrl = window.location.origin;
     const productSchema = [];
     
@@ -118,6 +119,9 @@ async function loadTools() {
         imageHtml = `<img src="${tool.image_url || 'https://via.placeholder.com/300'}" class="card-img-top" alt="${tool.name}" style="height: 200px; object-fit: cover;" loading="lazy">`;
       }
       
+      const whatsappMessage = `Halo, saya tertarik untuk menyewa:\n\n*${tool.name}*\nKategori: ${tool.category}\nHarga: ${price}/hari\n\nBisa tolong berikan informasi lebih lanjut?`;
+      const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}` : '#';
+      
       const toolCard = `
         <div class="col-lg-3 col-md-6 mb-4">
           <div class="card h-100 pb-3" itemscope itemtype="https://schema.org/Product">
@@ -132,7 +136,7 @@ async function loadTools() {
               </h5>
             </div>
             <div class="card-footer bg-transparent border-0 text-center">
-              <a href="#" class="btn btn-outline-primary btn-sm">Sewa Sekarang</a>
+              <a href="${whatsappUrl}" class="btn btn-outline-primary btn-sm" ${whatsappNumber ? 'target="_blank"' : ''}>Sewa Sekarang</a>
             </div>
           </div>
         </div>
