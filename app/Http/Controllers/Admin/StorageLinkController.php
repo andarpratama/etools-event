@@ -95,6 +95,22 @@ class StorageLinkController extends Controller
     private function createStorageCopy($linkPath, $targetPath, $request)
     {
         try {
+            $publicBaseDir = public_path();
+            
+            // Check if public directory is writable
+            if (!File::isWritable($publicBaseDir)) {
+                $errorMsg = 'Public directory is not writable. Please set permissions to 755 or 775 for: ' . $publicBaseDir;
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMsg,
+                        'instruction' => 'Please create the directory manually via File Manager: ' . $linkPath
+                    ], 500);
+                }
+                return redirect()->route('admin.settings.index')
+                    ->with('error', $errorMsg . ' Or create the directory manually: ' . $linkPath);
+            }
+            
             if (!File::exists($targetPath)) {
                 File::makeDirectory($targetPath, 0755, true);
             }
@@ -103,11 +119,46 @@ class StorageLinkController extends Controller
                 if (is_link($linkPath)) {
                     @unlink($linkPath);
                 } else {
-                    File::deleteDirectory($linkPath);
+                    // Don't delete if it's a directory with files, just use it
+                    if (!File::isDirectory($linkPath) || count(File::allFiles($linkPath)) == 0) {
+                        @File::deleteDirectory($linkPath);
+                    }
                 }
             }
             
-            File::makeDirectory($linkPath, 0755, true);
+            // Create directory recursively
+            if (!File::exists($linkPath)) {
+                try {
+                    File::makeDirectory($linkPath, 0755, true);
+                } catch (\Exception $e) {
+                    if (str_contains($e->getMessage(), 'File exists') || str_contains($e->getMessage(), 'already exists')) {
+                        // Directory already exists, that's fine
+                    } else {
+                        $errorMsg = 'Cannot create directory: ' . $linkPath . '. Error: ' . $e->getMessage() . '. Please create it manually via File Manager with permissions 755.';
+                        if ($request->expectsJson()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => $errorMsg
+                            ], 500);
+                        }
+                        return redirect()->route('admin.settings.index')
+                            ->with('error', $errorMsg);
+                    }
+                }
+            }
+            
+            if (!is_dir($linkPath)) {
+                $errorMsg = 'Directory does not exist and could not be created: ' . $linkPath . '. Please create it manually via File Manager.';
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMsg
+                    ], 500);
+                }
+                return redirect()->route('admin.settings.index')
+                    ->with('error', $errorMsg);
+            }
+            
             File::copyDirectory($targetPath, $linkPath);
             
             $message = 'Storage directory copied successfully! (Symlink not available on this server, using copy method)';
@@ -124,15 +175,20 @@ class StorageLinkController extends Controller
                 ->with('success', $message);
                 
         } catch (\Exception $e) {
+            $errorMsg = 'Error copying storage: ' . $e->getMessage();
+            if (str_contains($e->getMessage(), 'No such file') || str_contains($e->getMessage(), 'mkdir')) {
+                $errorMsg .= '. Please create the directory manually: ' . $linkPath . ' via File Manager with permissions 755.';
+            }
+            
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error copying storage: ' . $e->getMessage()
+                    'message' => $errorMsg
                 ], 500);
             }
             
             return redirect()->route('admin.settings.index')
-                ->with('error', 'Error copying storage: ' . $e->getMessage());
+                ->with('error', $errorMsg);
         }
     }
 }

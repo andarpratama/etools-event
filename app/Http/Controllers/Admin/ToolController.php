@@ -8,6 +8,7 @@ use App\Models\ToolImage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Yajra\DataTables\Facades\DataTables;
 
 class ToolController extends Controller
@@ -377,12 +378,75 @@ class ToolController extends Controller
         $sourcePath = storage_path('app/public/' . $storagePath);
         $publicPath = public_path('storage/' . $storagePath);
         $publicDir = dirname($publicPath);
+        $baseStorageDir = public_path('storage');
+        $publicBaseDir = public_path();
 
-        if (file_exists($sourcePath)) {
-            if (!is_dir($publicDir)) {
-                mkdir($publicDir, 0755, true);
+        if (!File::exists($sourcePath)) {
+            \Log::warning('Source file does not exist: ' . $sourcePath);
+            return;
+        }
+
+        try {
+            // Check if public directory is writable
+            if (!File::isWritable($publicBaseDir)) {
+                \Log::error('Public directory is not writable: ' . $publicBaseDir);
+                return;
             }
-            copy($sourcePath, $publicPath);
+
+            // Create directories recursively, one level at a time if needed
+            $directories = [];
+            $currentDir = $publicDir;
+            while ($currentDir !== $publicBaseDir && $currentDir !== dirname($currentDir)) {
+                if (!File::exists($currentDir)) {
+                    $directories[] = $currentDir;
+                }
+                $currentDir = dirname($currentDir);
+            }
+            $directories = array_reverse($directories);
+
+            foreach ($directories as $dir) {
+                if (!File::exists($dir)) {
+                    try {
+                        File::makeDirectory($dir, 0755, true);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to create directory: ' . $dir . ' - ' . $e->getMessage());
+                        return;
+                    }
+                }
+            }
+
+            // Verify directories exist and are writable
+            if (!File::exists($publicDir)) {
+                \Log::error('Failed to create directory: ' . $publicDir);
+                return;
+            }
+
+            if (!File::isWritable($publicDir)) {
+                \Log::error('Directory is not writable: ' . $publicDir);
+                return;
+            }
+
+            // Copy the file
+            File::copy($sourcePath, $publicPath);
+
+            // Verify file was copied
+            if (!File::exists($publicPath)) {
+                \Log::error('File copy failed - destination does not exist: ' . $publicPath);
+            } else {
+                \Log::info('File synced successfully', [
+                    'source' => $sourcePath,
+                    'destination' => $publicPath
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to sync file to public: ' . $e->getMessage(), [
+                'source' => $sourcePath,
+                'destination' => $publicPath,
+                'public_dir' => $publicDir,
+                'base_storage_dir' => $baseStorageDir,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
